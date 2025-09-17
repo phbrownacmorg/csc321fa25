@@ -25,9 +25,11 @@ write_int   rax, [REL sumlabel], sumlabellen
 mov   ECX, dword 0                             ; Produces 0 for the return code
 call  ExitProcess
 
-align       16
+section .bss
+num1    resq    1
+num2    resq    2
+
 section .data
-align 16
 prompt      db      "Please enter an integer: ", 10
 promptlen   EQU     $-prompt
 label1      db      "The first number is: "
@@ -36,8 +38,3 @@ label2      db      "The second number is: "
 label2len   EQU     $-label2
 sumlabel    db      "The sum of the numbers is: "
 sumlabellen EQU     $-sumlabel
-
-
-section .bss
-num1    resq    1
-num2    resq    2
