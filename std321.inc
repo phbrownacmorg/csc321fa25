@@ -138,7 +138,7 @@ MAX_STRING_LENGTH   EQU 90      ; 96 bytes less 4 for the length and 2 for the C
     mov     rcx, %1
     lea     rdx, %2
     mov     r8, %3
-    call    std321_read_int_fn
+    call    std321_write_int_fn
     add     rsp, 32
 %endmacro
 

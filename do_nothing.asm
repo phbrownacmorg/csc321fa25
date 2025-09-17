@@ -1,3 +1,4 @@
+%include "std321.inc"
 extern ExitProcess
 
 global start
