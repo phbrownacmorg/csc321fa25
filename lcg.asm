@@ -2,6 +2,8 @@
 extern ExitProcess
 
 SEED    EQU     001001011110110b
+;; Constants from Visual C++
+;; Results in bits 16-30
 M       EQU     80000000h
 A       EQU     343FDh
 C       EQU     269EC3h
