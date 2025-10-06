@@ -8,7 +8,7 @@ ASCII_LF            EQU 10      ;    substituted straight into the code)
 ASCII_ZERO          EQU 48
 ASCII_MINUS         EQU 45
 
-MAX_INT_LENGTH      EQU 11      ; Ten digits and a sign (for 32 bits)
+MAX_INT_LENGTH      EQU 13      ; Ten digits and a sign (for 32 bits), plus 2 for CR/LF
 MAX_STRING_LENGTH   EQU 90      ; 96 bytes less 4 for the length and 2 for the CR/LF
                                 ; IS THE CR/LF ALLOWANCE CORRECT?
 
