@@ -86,7 +86,7 @@ std321_int_to_str_fn:
         inc     rcx
         imul    r10, 10  ; Signed multiplication so product can go in R10
         cmp     rax, r10
-        jg      .CountDigits
+        jge      .CountDigits
     ;; RCX now holds the number of digits in the number
     add     r11, rcx    ; R11 = R11 + RCX - 1 (next line)
     dec     r11         ; R11 now points to the place for the *last* digit
