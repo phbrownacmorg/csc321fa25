@@ -1,7 +1,7 @@
 %include "std321.inc"
 extern ExitProcess
 
-NUMS_TO_PRINT EQU   2
+NUMS_TO_PRINT EQU   20
 
 global start
 
