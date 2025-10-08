@@ -3,17 +3,11 @@ extern ExitProcess
 
 global start
 
+
+
 section .text
 start:
 write_str   [REL startmsg], startmsglen
-
-;; How many numbers should we generate?
-read_int    [REL repsmsg], repsmsglen
-;; Bet that the user didn't actually ask for more than 2 ** 32 repetitions
-mov         ecx, eax
-
-;; Verify the number was read (for testing only)
-;; write_int   ecx, [REL repsmsg], repsmsglen
 
 mov         rax, [REL SEED]
 
@@ -21,20 +15,24 @@ startloop:
     mul         qword [REL A]       ;; result fits in RAX, RDX := 0
     add         rax, [REL C]
     div         qword [REL M]       ;; modulus is in RDX
-    push        rdx                 ;; save the random value on the stack
-    
-    push        rcx
+    push        rdx                 ;; save the random value on the stack    
     write_int   rdx, [REL outmsg], outmsglen
-    pop         rcx
+    read_str    [REL repmsg], repmsglen, [REL response]
     pop         rax                 ;; Restore the random value to RAX
 
-    loop        startloop
+    ;; Compare the first character of the response to 'Y'
+    mov         dl, [REL response]
+    and         dl, 11011111b  ;; Make it case-insensitive
+    cmp         dl, 'Y'
+    jz          startloop  ;; Jump back if response started with 'Y'
 
 
 ;; Return code 0 for normal completion
 mov   ECX, dword 0                             ; Produces 0 for the return code
 call  ExitProcess
 
+section .bss
+response    RESB    MAX_STRING_LENGTH+2
 
 section .data
 ;; Constants
@@ -47,7 +45,7 @@ C       dq     269EC3h
 
 startmsg    db      "This program implements a linear congruential generator", 10
 startmsglen EQU     $-startmsg
-repsmsg     db      "How many pseudo-random numbers would you like? "
-repsmsglen  EQU     $-repsmsg
+repmsg      db      "Generate another? (Y/N) "
+repmsglen   EQU     $-repmsg
 outmsg      db      "Number: "
 outmsglen   EQU     $-outmsg
