@@ -3,8 +3,6 @@ extern ExitProcess
 
 global start
 
-
-
 section .text
 start:
 write_str   [REL startmsg], startmsglen
