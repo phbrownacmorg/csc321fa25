@@ -17,7 +17,7 @@ start:
 
     ;; Read the coefficients, pushing them on the stack as we go
     mov         rcx, [REL deg]
-    add         rcx, 1
+    inc         rcx
     read_loop:
         push rcx
         read_int    [REL amsg], amsglen
@@ -40,11 +40,10 @@ start:
     add     rsp, 16         ; Get rid of the half-shadow space
 
     ;; Need to pop all the a[i]'s off the stack
-    mov     ecx, [REL deg]
-    add     ecx, 1
-    lose_coefficients:
-        pop     r8
-        loop    lose_coefficients
+    mov     rcx, [REL deg]
+    inc     rcx             ;; RCX now has the number of coefficients
+    sal     rcx, 3          ;; RCX = RCX * 8
+    add     rsp, rcx        ;; Removes all the coefficients from the stack
 
     write_int   rax, [REL evalmsg], evalmsglen 
 
@@ -68,18 +67,18 @@ eval_poly:
     ;; rsp+8*i+24   r8
 
     ;; Degree is already in RCX
-    add         rcx, 1
-    lea         r8, rsp+24 ;; Address of a[n]
+    inc         rcx
+    lea         r8, [rsp+24] ;; Address of a[n]
     mov         rax, [r8]  ;; RAX := a[n]
-    jmp         loop_test
+    jmp         .loop_test
 
-    eval_loop:
-        imul    rdx         ;; Blithely assume no overflow into RDX
-        mov     rdx, [rsp+16]
-        add     r8, 8
+    .eval_loop:
+        imul    rdx             ;; Blithely assume no overflow into RDX
+        mov     rdx, [rsp+16]   ;; mul wiped RDX.  RDX := X
+        add     r8, 8           ;; R8 := Address of a[i-1]
         add     rax, [r8]
-    loop_test:
-        loop    eval_loop
+    .loop_test:
+        loop    .eval_loop
     ret
 
 section .bss
