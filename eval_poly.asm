@@ -9,6 +9,31 @@ global start
     inc     rcx             ;; Number of coefficients is degree + 1
 %endmacro
 
+;; Copies a string from one place to another.
+;; Arguments:
+;; 1.  Address of source string (not REL)
+;; 2.  Length of source string
+;; 3.  Address of destination string
+;; 4.  Offset into destination string (optional, default 0)
+;; The number of bytes copied is not returned (it should be %2 anyway)
+%macro strcpy   3-4         0
+    ;; Push the registers used, so they can be restored later
+    push    rdi
+    push    rsi
+    push    rcx
+    ;; Load up the addresses
+    lea     rsi, %1
+    lea     rdi, %3
+    add     rdi, %4
+    mov     rcx, %2
+    cld     ;; Forward!
+    rep     movsb
+    ;; Restore the registers
+    pop     rcx
+    pop     rsi
+    pop     rdi
+%endmacro
+
 
 ;; Arguments:
 ;;  1.  Address of string that precedes the integer (before_string)
@@ -19,49 +44,7 @@ global start
 ;;  6.  Address of space where I can store the result string
 ;;  The length of the result string is returned in RAX.
 %macro  plug_int_into_str   6
-    ;; Save the non-volatile registers
-    push    rsi
-    push    rdi
 
-    ;; FIX ME!
-    ;; Possibilities: 1.  Push all the parameters on the stack as qwords
-    ;;                      and dump that space at the end.  Heavyweight but will work.
-    ;;                2.  Try to save and restore the changed registers after each part,
-    ;;                      in case those changed registers had parameters.  But then
-    ;;                      where do I save the end (or size) of the string?
-    
-    ;; Save the volatile register (that might contain a parameter)
-    push    rcx
-
-    ;; Copy the before_string into the result
-    xor     rdi, rdi    ;; Zero out the top half of RDI
-    mov     rcx, %2
-    mov     esi, %1
-    mov     edi, %6
-    cld
-    rep     movsb
-
-
-
-    ;; Write the number into the result
-    int_to_str  %5, rdi
-    ;; RDI is non-volatile, so int_to_string left it unchanged
-    add     rdi, rax  ;; Add the number of bytes in the number to RDI
-
-    ;; Copy the after_string into the result
-    ;; RDI already has its address
-    mov     rcx, %4
-    mov     esi, %3
-    cld
-    rep     movsb
-
-    ;; Put the final number of bytes into RAX
-    mov     rax, rdi
-    sub     rax, %6
-
-    ;; Pop the non-volatile registers
-    pop     rdi
-    pop     rsi
 %endmacro
 
 section .text
@@ -79,17 +62,21 @@ start:
     ;; Read the coefficients, pushing them on the stack as we go
     LoadNumCoefficients
     .read_loop:
-        push rcx
-        plug_int_into_str   [REL apremsg], aprelen, [REL apostmsg], apostlen, rcx, [REL amsg]
-        read_int    [REL amsg], rax
-        pop rcx
-        push rax                        ;; Coefficient goes on the stack
+        push        rcx                     ;; Save RCX before messing with it
+        dec         rcx
+        sub         rcx, [REL deg]
+        neg         rcx
+        int_to_str  rcx, [REL amsg+aprelen]
+        add         rax, aprelen            ;; RAX gets the combined length of the number and the pre-message
+        strcpy      [REL apostmsg], apostlen, [REL amsg], rax
+        add         rax, apostlen           ;; RAX now has the length of the prompt string
+        read_int    [REL amsg], rax         ;; RAX gets the coefficient
+        pop         rcx                     ;; Restore RCX before pushing the coefficient
+        push        rax                     ;; Coefficient goes on the stack
         loop    .read_loop
 
     ;; All coefficients are on the stack, with a[n] at the bottom (hanging
     ;; stack) and a[0] at the top
-
-    ;; Am I going to have alignment issues here?
 
     mov     rcx, [REL deg]
     mov     rdx, [REL x]
@@ -155,10 +142,11 @@ xmsg        db      "Please enter the value of x at which to evaluate: "
 xmsglen     EQU     $-xmsg
 degmsg      db      "Please enter the degree of the polynomial: "
 deglen      EQU     $-degmsg
-apremsg     db      "Please enter a value for a["
-aprelen     EQU     $-apremsg
 apostmsg    db      "]: "
 apostlen    EQU     $-apostmsg
+amsg        db      "Please enter a value for a["
+aprelen     EQU     $-amsg
+numslot     db      0 DUP (MAX_INT_LENGTH + apostlen)
 echomsg     db      "The number read was: "
 echomsglen  EQU     $-echomsg
 evalmsg     db      "The polynomial evaluated to: "
@@ -167,5 +155,6 @@ evalmsglen  EQU     $-evalmsg
 section .bss
 x       resq    1
 deg     resq    1   ;; Really better keep to deg <= 255
-amsg    resb    aprelen + apostlen + MAX_INT_LENGTH
+;amsg    resb    MAX_STRING_LENGTH
+;amsglen resq    1
 
