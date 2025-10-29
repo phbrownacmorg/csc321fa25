@@ -11,7 +11,7 @@ global start
 
 ;; Copies a string from one place to another.
 ;; Arguments:
-;; 1.  Address of source string (not REL)
+;; 1.  Address of source string
 ;; 2.  Length of source string
 ;; 3.  Address of destination string
 ;; 4.  Offset into destination string (optional, default 0)
@@ -34,19 +34,6 @@ global start
     pop     rdi
 %endmacro
 
-
-;; Arguments:
-;;  1.  Address of string that precedes the integer (before_string)
-;;  2.  Length of before_string
-;;  3.  Address of string that comes after the integer (after_string)
-;;  4.  Length of after_string
-;;  5.  Integer to insert
-;;  6.  Address of space where I can store the result string
-;;  The length of the result string is returned in RAX.
-%macro  plug_int_into_str   6
-
-%endmacro
-
 section .text
 start:
     ;; Read x
@@ -66,9 +53,9 @@ start:
         dec         rcx
         sub         rcx, [REL deg]
         neg         rcx
-        int_to_str  rcx, [REL amsg+aprelen]
+        int_to_str  rcx, [REL numslot]
+        strcpy      [REL apostmsg], apostlen, [REL numslot], rax
         add         rax, aprelen            ;; RAX gets the combined length of the number and the pre-message
-        strcpy      [REL apostmsg], apostlen, [REL amsg], rax
         add         rax, apostlen           ;; RAX now has the length of the prompt string
         read_int    [REL amsg], rax         ;; RAX gets the coefficient
         pop         rcx                     ;; Restore RCX before pushing the coefficient
